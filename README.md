@@ -10,4 +10,5 @@ This proejct explores two questions regarding COVID-19:
   
 ## Table of Contents:  
 COVID19.txt: dataset of the project  
-
+Final_Project 3.rmd: R markdown of the project
+Final_Project-3.html: HTML file of the project
