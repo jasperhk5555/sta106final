@@ -1,4 +1,3 @@
-# Readme
 This repository contains the final project of STA 106.  
 
 The data set is adapted from the provisional COVID-19 deaths by sex, age, and state data from the CDC website.  
