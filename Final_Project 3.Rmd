@@ -1,0 +1,413 @@
+---
+title: "Final Project"
+author: "Octavio Ramalho, Zachary Cordoni, Xinran Shi, Jasper Cheng "
+output: html_document
+---
+
+### Covid Proportion
+```{r}
+library(pander)
+mydata = read.table("COVID19.txt", header=T, sep="\t")
+mydata[is.na(mydata)]=0
+Y = mydata$COVIDProp
+
+factorA = as.numeric(factor(mydata$AgeGroup))
+factorB = as.numeric(factor(mydata$Sex))
+
+a = length(unique(factorA))
+b = length(unique(factorB))
+
+Yijbar = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yijbar[i,j] = mean(Y[factorA==i&factorB==j])
+  }
+}
+
+u = mean(Y)
+Yi.bar = apply(Yijbar,MARGIN = 1,mean)
+Y.jbar = apply(Yijbar,MARGIN = 2,mean)
+alpha = Yi.bar-u
+
+beta = Y.jbar-u
+
+gamma = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    gamma[i,j] = Yijbar[i,j]-Yi.bar[i]-Y.jbar[j]+u
+  }
+}
+
+
+print(list(mean=u, Yi.bar=Yi.bar, Y.jbar=Y.jbar))
+
+alphaplot = as.data.frame(alpha)
+rownames(alphaplot) =c("0-17 years","18-29 years","30-49 years","50-64 years","65-74 years","75-84 years","85+ years")
+pander(pandoc.table(alphaplot,caption = 'alpha'))
+
+betaplot = as.data.frame(beta)
+rownames(betaplot) =c("Female","Male")
+pander(pandoc.table(betaplot),caption = 'beta')
+
+
+gammaplot = as.data.frame(gamma)
+colnames(gammaplot) =c("Female","Male")
+rownames(gammaplot) =c("0-17 years","18-29 years","30-49 years","50-64 years","65-74 years","75-84 years","85+ years")
+pander(pandoc.table(gammaplot,caption = 'gamma'))
+```
+
+```{r}
+#Residual Plot, Normal Q-Q plot, and Interaction plot to check for equal variance, normality, and interactions in Covid data set.
+
+n = length(Y)/(a*b)
+Yhat = rep(0,length(Y))
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yhat[factorA==i&factorB==j] = Yijbar[i,j]
+  }
+}
+e = Y-Yhat
+
+plot(Yhat,e,main = 'Residual plot',xlab = 'fitted values',ylab='residuals')
+abline(h=0)
+
+hist(e)
+qqnorm(e)
+qqline(e)
+
+interaction.plot(factorA,factorB,response = Y,xlab= c('Age Group'),trace.label = c('Sex'))
+```
+
+```{r}
+#Covid Proportion ANOVA Table
+
+SSA = n*b*sum(alpha^2)
+SSB = n*a*sum(beta^2)
+SSAB = n*sum(gamma^2)
+SSE = sum((Y-Yhat)^2)
+SSTotal = sum((Y-u)^2)
+MSE = SSE/(a*b*(n-1))
+AnovaTable = matrix(0,nrow = 5,ncol = 5)
+AnovaTable[1,1] = SSA
+AnovaTable[1,2] = a-1
+AnovaTable[1,3] = SSA/(a-1)
+AnovaTable[1,4] = AnovaTable[1,3]/MSE
+AnovaTable[2,1] = SSB
+AnovaTable[2,2] = b-1
+AnovaTable[2,3] = SSB/(b-1)
+AnovaTable[2,4] = AnovaTable[2,3]/MSE
+AnovaTable[3,1] = SSAB
+AnovaTable[3,2] = (a-1)*(b-1)
+AnovaTable[3,3] = SSAB/((a-1)*(b-1))
+AnovaTable[3,4] = AnovaTable[3,3]/MSE
+AnovaTable[4,1] = SSE
+AnovaTable[4,2] = a*b*(n-1)
+AnovaTable[4,3] = SSE/(a*b*(n-1))
+AnovaTable[4,4] = '-'
+AnovaTable[5,1] = SSTotal
+AnovaTable[5,2] = n*a*b-1
+AnovaTable[5,3] = '-'
+AnovaTable[5,4] = '-'
+AnovaTable[1,5] = qf(.95, (a-1),(n-1)*a*b)
+AnovaTable[2,5] = qf(.95, (b-1),(n-1)*a*b)
+AnovaTable[3,5] = qf(.95,(a-1)*(b-1),(n-1)*a*b)
+AnovaTable[4,5] = '-'
+AnovaTable[5,5] = '-'
+AnovaTable = as.data.frame(AnovaTable)
+rownames(AnovaTable) = c('factor A','factor B','AB interaction ','Error','Total')
+colnames(AnovaTable) = c('SS','df','MS','F values', 'F*')
+pander(pandoc.table(AnovaTable))
+
+```
+```{r}
+#Covid multiple R squared
+
+(cor(factorA, Y))^2
+(cor(factorA+factorB, Y))^2
+
+```
+
+###Influenza Proportion
+```{r}
+Y = mydata$InfluenzaProp
+
+factorA = as.numeric(factor(mydata$AgeGroup))
+factorB = as.numeric(factor(mydata$Sex))
+
+a = length(unique(factorA))
+b = length(unique(factorB))
+
+
+Yijbar = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yijbar[i,j] = mean(Y[factorA==i&factorB==j])
+  }
+}
+
+u = mean(Y)
+Yi.bar = apply(Yijbar,MARGIN = 1,mean)
+Y.jbar = apply(Yijbar,MARGIN = 2,mean)
+alpha = Yi.bar-u
+
+beta = Y.jbar-u
+
+gamma = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    gamma[i,j] = Yijbar[i,j]-Yi.bar[i]-Y.jbar[j]+u
+  }
+}
+
+print(list(mean=u, Yi.bar=Yi.bar, Y.jbar=Y.jbar))
+
+alphaplot = as.data.frame(alpha)
+rownames(alphaplot) =c("0-17 years","18-29 years","30-49 years","50-64 years","65-74 years","75-84 years","85+ years")
+pander(pandoc.table(alphaplot,caption = 'alpha'))
+
+betaplot = as.data.frame(beta)
+rownames(betaplot) =c("Female","Male")
+pander(pandoc.table(betaplot),caption = 'beta')
+
+
+gammaplot = as.data.frame(gamma)
+colnames(gammaplot) =c("Female","Male")
+rownames(gammaplot) =c("0-17 years","18-29 years","30-49 years","50-64 years","65-74 years","75-84 years","85+ years")
+pander(pandoc.table(gammaplot,caption = 'gamma'))
+```
+```{r}
+#Influenza Proportion ANOVA table
+
+n = length(Y)/(a*b)
+Yhat = rep(0,length(Y))
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yhat[factorA==i&factorB==j] = Yijbar[i,j]
+  }
+}
+e = Y-Yhat
+
+SSA = n*b*sum(alpha^2)
+SSB = n*a*sum(beta^2)
+SSAB = n*sum(gamma^2)
+SSE = sum((Y-Yhat)^2)
+SSTotal = sum((Y-u)^2)
+MSE = SSE/(a*b*(n-1))
+AnovaTable = matrix(0,nrow = 5,ncol = 5)
+AnovaTable[1,1] = SSA
+AnovaTable[1,2] = a-1
+AnovaTable[1,3] = SSA/(a-1)
+AnovaTable[1,4] = AnovaTable[1,3]/MSE
+AnovaTable[2,1] = SSB
+AnovaTable[2,2] = b-1
+AnovaTable[2,3] = SSB/(b-1)
+AnovaTable[2,4] = AnovaTable[2,3]/MSE
+AnovaTable[3,1] = SSAB
+AnovaTable[3,2] = (a-1)*(b-1)
+AnovaTable[3,3] = SSAB/((a-1)*(b-1))
+AnovaTable[3,4] = AnovaTable[3,3]/MSE
+AnovaTable[4,1] = SSE
+AnovaTable[4,2] = a*b*(n-1)
+AnovaTable[4,3] = SSE/(a*b*(n-1))
+AnovaTable[4,4] = '-'
+AnovaTable[5,1] = SSTotal
+AnovaTable[5,2] = n*a*b-1
+AnovaTable[5,3] = '-'
+AnovaTable[5,4] = '-'
+AnovaTable[1,5] = qf(.95, (a-1),(n-1)*a*b)
+AnovaTable[2,5] = qf(.95, (b-1),(n-1)*a*b)
+AnovaTable[3,5] = qf(.95,(a-1)*(b-1),(n-1)*a*b)
+AnovaTable[4,5] = '-'
+AnovaTable[5,5] = '-'
+AnovaTable = as.data.frame(AnovaTable)
+rownames(AnovaTable) = c('factor A','factor B','AB interaction ','Error','Total')
+colnames(AnovaTable) = c('SS','df','MS','F values', 'F*')
+pander(pandoc.table(AnovaTable))
+
+```
+
+```{r}
+#Residual Plot, Normal Q-Q plot, and Interaction plot to check for equal variance, normality, and interactions in Influenza data set.
+
+Y = mydata$InfluenzaProp
+Y = Y^2
+
+
+Yijbar = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yijbar[i,j] = mean(Y[factorA==i&factorB==j])
+  }
+}
+
+n = length(Y)/(a*b)
+Yhat = rep(0,length(Y))
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yhat[factorA==i&factorB==j] = Yijbar[i,j]
+  }
+}
+e = Y-Yhat
+
+plot(Yhat,e,main = 'Residual plot',xlab = 'fitted values',ylab='residuals')
+abline(h=0)
+
+hist(e)
+qqnorm(e)
+qqline(e)
+
+interaction.plot(factorA,factorB,response = Y,xlab= c('Age Group'),trace.label = c('Sex'))
+```
+
+
+```{r}
+#Infuenza multpile R squared
+
+(cor(factorA, Y))^2
+(cor(factorA+factorB, Y))^2
+
+```
+
+###Pneumonia Proportion
+```{r}
+Y = mydata$PneumoniaProp
+
+factorA = as.numeric(factor(mydata$AgeGroup))
+factorB = as.numeric(factor(mydata$Sex))
+
+
+a = length(unique(factorA))
+b = length(unique(factorB))
+
+
+Yijbar = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yijbar[i,j] = mean(Y[factorA==i&factorB==j])
+  }
+}
+
+u = mean(Y)
+Yi.bar = apply(Yijbar,MARGIN = 1,mean)
+Y.jbar = apply(Yijbar,MARGIN = 2,mean)
+alpha = Yi.bar-u
+
+beta = Y.jbar-u
+
+gamma = matrix(0,nrow = a,ncol = b)
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    gamma[i,j] = Yijbar[i,j]-Yi.bar[i]-Y.jbar[j]+u
+  }
+}
+
+print(list(mean=u, Yi.bar=Yi.bar, Y.jbar=Y.jbar))
+
+alphaplot = as.data.frame(alpha)
+rownames(alphaplot) =c("0-17 years","18-29 years","30-49 years","50-64 years","65-74 years","75-84 years","85+ years")
+pander(pandoc.table(alphaplot,caption = 'alpha'))
+
+betaplot = as.data.frame(beta)
+rownames(betaplot) =c("Female","Male")
+pander(pandoc.table(betaplot),caption = 'beta')
+
+
+gammaplot = as.data.frame(gamma)
+colnames(gammaplot) =c("Female","Male")
+rownames(gammaplot) =c("0-17 years","18-29 years","30-49 years","50-64 years","65-74 years","75-84 years","85+ years")
+pander(pandoc.table(gammaplot,caption = 'gamma'))
+```
+
+```{r}
+#Residual Plot, Normal Q-Q plot, and Interaction plot to check for equal variance, normality, and interactions in Pneumonia data set.
+
+n = length(Y)/(a*b)
+Yhat = rep(0,length(Y))
+for(i in 1:a)
+{
+  for(j in 1:b)
+  {
+    Yhat[factorA==i&factorB==j] = Yijbar[i,j]
+  }
+}
+e = Y-Yhat
+
+plot(Yhat,e,main = 'Residual plot',xlab = 'fitted values',ylab='residuals')
+abline(h=0)
+
+hist(e)
+qqnorm(e)
+qqline(e)
+
+interaction.plot(factorA,factorB,response = Y,xlab= c('Age Group'),trace.label = c('Sex'))
+```
+
+```{r}
+SSA = n*b*sum(alpha^2)
+SSB = n*a*sum(beta^2)
+SSAB = n*sum(gamma^2)
+SSE = sum((Y-Yhat)^2)
+SSTotal = sum((Y-u)^2)
+MSE = SSE/(a*b*(n-1))
+AnovaTable = matrix(0,nrow = 5,ncol = 5)
+AnovaTable[1,1] = SSA
+AnovaTable[1,2] = a-1
+AnovaTable[1,3] = SSA/(a-1)
+AnovaTable[1,4] = AnovaTable[1,3]/MSE
+AnovaTable[2,1] = SSB
+AnovaTable[2,2] = b-1
+AnovaTable[2,3] = SSB/(b-1)
+AnovaTable[2,4] = AnovaTable[2,3]/MSE
+AnovaTable[3,1] = SSAB
+AnovaTable[3,2] = (a-1)*(b-1)
+AnovaTable[3,3] = SSAB/((a-1)*(b-1))
+AnovaTable[3,4] = AnovaTable[3,3]/MSE
+AnovaTable[4,1] = SSE
+AnovaTable[4,2] = a*b*(n-1)
+AnovaTable[4,3] = SSE/(a*b*(n-1))
+AnovaTable[4,4] = '-'
+AnovaTable[5,1] = SSTotal
+AnovaTable[5,2] = n*a*b-1
+AnovaTable[5,3] = '-'
+AnovaTable[5,4] = '-'
+AnovaTable[1,5] = qf(.95, (a-1),(n-1)*a*b)
+AnovaTable[2,5] = qf(.95, (b-1),(n-1)*a*b)
+AnovaTable[3,5] = qf(.95,(a-1)*(b-1),(n-1)*a*b)
+AnovaTable[4,5] = '-'
+AnovaTable[5,5] = '-'
+AnovaTable = as.data.frame(AnovaTable)
+rownames(AnovaTable) = c('factor A','factor B','AB interaction ','Error','Total')
+colnames(AnovaTable) = c('SS','df','MS','F values', 'F*')
+pander(pandoc.table(AnovaTable))
+
+```
+```{r}
+#Pneumonia multiple R squared
+
+(cor(factorA, Y))^2
+(cor(factorA+factorB, Y))^2
+
+```
+###Acknowledgment
+We'd like to thank the T.A. Yejiong Zhu and Professor Chen for creating the foundational code for our analysis.
+
