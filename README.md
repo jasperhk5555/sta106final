@@ -9,4 +9,5 @@ This proejct explores two questions regarding COVID-19:
   <li>Do they play a similar role in deaths involving influenza/penumonia?</li>
   
 Table of Contents:  
-COVID
+COVID19.txt: dataset of the project  
+
