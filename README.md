@@ -8,7 +8,7 @@ This proejct explores two questions regarding COVID-19:
   <li>How do sex and age play a role in COVID-19 deaths?</li>
   <li>Do they play a similar role in deaths involving influenza/penumonia?</li>
   
-## Table of Contents:  
+# Table of Contents:  
 COVID19.txt: dataset of the project  
-Final_Project 3.rmd: R markdown of the project
+Final_Project 3.rmd: R markdown of the project  
 Final_Project-3.html: HTML file of the project
